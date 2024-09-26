@@ -15,6 +15,6 @@ const RoleSchema = new Schema(
   { timestamps: true }
 );
 
-const RoleModel = models.conatct_form || model("role", RoleSchema);
+const RoleModel = models.role || model("role", RoleSchema);
 
 export default RoleModel;

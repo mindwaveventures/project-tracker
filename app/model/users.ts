@@ -28,6 +28,6 @@ const UserSchema = new Schema(
   { timestamps: true }
 );
 
-const UserModel = models.conatct_form || model("user", UserSchema);
+const UserModel = models.user || model("user", UserSchema);
 
 export default UserModel;
