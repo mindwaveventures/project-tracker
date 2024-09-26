@@ -1,26 +1,32 @@
 import { connectToMongoDB } from "@/app/lib/db";
-import RoleModel from "@/app/model/roles";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
+import TaskModel from "@/app/model/task";
 
 const projectValidationSchema = z.object({
   name: z.string().min(3).max(100),
+  description: z.string().min(3).max(500).optional(),
+  start_end: z.date().nullable().optional(),
+  end_date: z.date().nullable().optional(),
+  priority: z.string().optional(),
+  assigners: z
+    .array(z.string().min(3).max(200)) // Array of strings with length constraints
+    .min(1, { message: "At least one assigner is required" }), // Minimum 1 element in array
   status: z.string().optional(),
 });
 
 export async function GET() {
   const session = await getServerSession(authOptions);
+  console.log("session", session);
 
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   await connectToMongoDB();
-
-  const result = await RoleModel.find({});
-
+  const result = await TaskModel.find({}).populate("assigners", "name");
   return NextResponse.json({
     result: result,
   });
@@ -41,13 +47,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(validation.error.format(), { status: 400 });
   }
 
-  const saveData = await RoleModel.create(validation.data);
+  const saveData = await TaskModel.create(validation.data);
 
   if (saveData) {
     return NextResponse.json({ result: saveData }, { status: 201 });
   } else {
     return NextResponse.json(
-      { msg: 'Database connection error' },
+      { msg: "Database connection error" },
       { status: 400 }
     );
   }

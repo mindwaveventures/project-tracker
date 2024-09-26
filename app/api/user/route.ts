@@ -1,8 +1,8 @@
 import { connectToMongoDB } from "@/app/lib/db";
-import RoleModel from "@/app/model/roles";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
+import UserModel from "@/app/model/users";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -12,29 +12,10 @@ export async function GET() {
   }
 
   await connectToMongoDB();
-  const ottApplications = await RoleModel.find({});
+
+  const result = await UserModel.find({});
+
   return NextResponse.json({
-    result: ottApplications,
+    result: result,
   });
 }
-
-// export async function POST(request: NextRequest) {
-//   const payload = await request.json();
-//   const validation: any = ottApplicationSchema.safeParse(payload);
-
-//   await connectDB();
-//   if (!validation.success) {
-//     return NextResponse.json(validation.error.format(), { status: 400 });
-//   }
-
-//   const saveData = await OTTApplicationModel.create(validation.data);
-
-//   if (saveData) {
-//     return NextResponse.json({ result: saveData }, { status: 201 });
-//   } else {
-//     return NextResponse.json(
-//       { msg: 'Database connection error' },
-//       { status: 400 }
-//     );
-//   }
-// }
