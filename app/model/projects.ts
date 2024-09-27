@@ -5,6 +5,9 @@ const ProjectSchema = new Schema(
     name: {
       type: String,
     },
+    code: {
+      type: String,
+    },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user'

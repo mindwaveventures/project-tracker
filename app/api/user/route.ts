@@ -13,7 +13,7 @@ export async function GET() {
 
   await connectToMongoDB();
 
-  const result = await UserModel.find({});
+  const result = await UserModel.find({}).populate('role', 'name');
 
   return NextResponse.json({
     result: result,

@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { z } from "zod";
 import TaskModel from "@/app/model/task";
+import ProjectModel from "@/app/model/projects";
 
 const projectValidationSchema = z.object({
+  project: z.string().min(3).max(100),
   name: z.string().min(3).max(100),
   description: z.string().min(3).max(500).optional(),
   start_end: z.date().nullable().optional(),
@@ -16,6 +18,11 @@ const projectValidationSchema = z.object({
     .min(1, { message: "At least one assigner is required" }), // Minimum 1 element in array
   status: z.string().optional(),
 });
+
+function generateTaskId(baseTaskId: string, count: Number) {
+  const paddedCount = String(count).padStart(5, '0'); // Pads the count to 3 digits
+  return `${baseTaskId}-${paddedCount}`;
+}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -47,7 +54,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(validation.error.format(), { status: 400 });
   }
 
-  const saveData = await TaskModel.create(validation.data);
+  const taskCount = await TaskModel.countDocuments({ project: validation.data.project });
+
+  const projectDetail = await ProjectModel.findOne({ _id: validation.data.project });
+
+  const task_id = generateTaskId(projectDetail.code, taskCount);
+  
+  const saveData = await TaskModel.create({...validation.data, task_id });
 
   if (saveData) {
     return NextResponse.json({ result: saveData }, { status: 201 });

@@ -5,6 +5,10 @@ const TaskerSchema = new Schema(
     name: {
       type: String,
     },
+    task_id: {
+      type: String,
+      unique: true,  // Enforce uniqueness for task_id
+    },
     description: {
       type: String,
     },
@@ -22,6 +26,10 @@ const TaskerSchema = new Schema(
     },
     priority: {
       type: String,
+    },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'project'
     },
     assigners: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
