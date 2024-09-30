@@ -48,7 +48,7 @@ export const authOptions: AuthOptions = {
         // Attach additional fields to the session object
         if (userData) {
             useSesion.user.user_id = userData._id; // Attach user_id to session
-            useSesion.user.role = userData.role.name; // Attach role to session
+            useSesion.user.role = userData.role?.name; // Attach role to session
         }
       }
       // You can add extra fields to session here
