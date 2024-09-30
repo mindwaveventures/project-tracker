@@ -65,11 +65,11 @@ export default function ExployeesCard() {
                   </AvatarFallback>
                 </Avatar>
                 <h3 className="text-lg font-semibold mb-1">{employee.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  {employee.role.name}
-                </p>
+                {/* <p className="text-sm text-muted-foreground mb-2">
+                  
+                </p> */}
                 <Badge variant="secondary" className="mb-2">
-                  {employee.department}
+                  {employee.role?.name}
                 </Badge>
                 <a
                   href={`mailto:${employee.email}`}
