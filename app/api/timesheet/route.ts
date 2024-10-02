@@ -27,64 +27,64 @@ function getDatesBetween(startDate: string, endDate: string) {
   return dates;
 }
 
-// Timelinse start utility
+// Function to generate timesheet response
+const generateTimesheetResponse = (
+  data: any,
+  startDate: string | null,
+  endDate: string | null
+) => {
+  const start = moment(startDate);
+  const end = moment(endDate);
+  const timesheetResponse: any = { dates: [], tasks: [] };
 
-// Function to extract unique dates from timeLogs
+  // Collect the list of dates within the range
+  for (
+    let date = start.clone();
+    date.isSameOrBefore(end);
+    date.add(1, "days")
+  ) {
+    timesheetResponse.dates.push(date.format("YYYY-MM-DD"));
+  }
 
-function getUniqueDates(timeLogs: any) {
-  const dateSet = new Set();
-  timeLogs.forEach((log: any) => {
-    const date = new Date(log.date).toISOString().split("T")[0]; // Get date in YYYY-MM-DD format
-    dateSet.add(date);
-  });
-  return Array.from(dateSet).sort(); // Sort dates for better display
-}
+  console.log("data.resul", data);
 
-// Transform function to create timesheet data dynamically based on selected dates
-function transformTimesheetData(timeLogs: any, selectedDates: any) {
-  // Collect tasks with their respective hours per selected date
-  const tasksMap = new Map();
+  data.forEach((task: any) => {
+    const taskTimesheet: any = {};
 
-  // Iterate through each log entry
-  timeLogs.forEach((log: any) => {
-    const taskId = log.task.task_id;
-    const date = new Date(log.date).toISOString().split("T")[0];
+    // Initialize task name and id
+    taskTimesheet.task_id = task.task_id;
+    taskTimesheet.task_name = task.name;
+    taskTimesheet.category = 'Brook';
+    taskTimesheet.billing_type = 'Billing';
+    taskTimesheet.hours = {};
 
-    if (!tasksMap.has(taskId)) {
-      tasksMap.set(taskId, {
-        task_id: taskId,
-        task_name: log.task.name,
-        hours: selectedDates.reduce((acc: any, d) => {
-          acc[d] = 0; // Initialize all selected dates with 0 hours
-          return acc;
-        }, {}),
+    console.log('task.project', taskTimesheet);
+    
+
+    // For each date, add the corresponding hours
+    for (let date = start.clone(); date.isSameOrBefore(end); date.add(1, 'days')) {
+      const currentDate = date.format('YYYY-MM-DD');
+      let dailyDuration = 0;
+
+      // Calculate the total duration for the current date
+      task.timesheet.forEach((entry: any) => {
+        const entryDate = moment(entry.date).format('YYYY-MM-DD');
+        if (entryDate === currentDate) {
+          dailyDuration += entry.duration;
+        }
       });
+
+      // Add the date as key and duration as value in the hours object
+      taskTimesheet.hours[currentDate] = dailyDuration;
     }
 
-    const taskData = tasksMap.get(taskId);
-    if (selectedDates.includes(date)) {
-      taskData.hours[date] += log.duration; // Accumulate duration for the date if it falls within selected dates
-    }
+    timesheetResponse.tasks.push(taskTimesheet);
   });
 
-  // Ensure every task has an entry for each selected date
-  tasksMap.forEach((taskData) => {
-    selectedDates.forEach((date: any) => {
-      if (!taskData.hours.hasOwnProperty(date)) {
-        taskData.hours[date] = 0;
-      }
-    });
-  });
+  return timesheetResponse;
+};
 
-  const transformedData = {
-    tasks: Array.from(tasksMap.values()), // Convert Map to array
-    dates: selectedDates,
-  };
-
-  return transformedData;
-}
-
-// Timeline end
+// Timelinse end utility
 
 // Helper function to format the date (e.g., 2024-09-28)
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
   const project_id = queryParams.get("project"); // Extract specific query parameters
   const start_date = queryParams.get("start_date"); // Extract specific query parameters
   const end_date = queryParams.get("end_date"); // Extract specific query parameters
+  let user_id = queryParams.get("user_id"); // Extract specific query parameters
 
   const findQuery: any = {};
 
@@ -135,22 +136,53 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  if (!user_id) {
+    findQuery.created_by = session?.user?.user_id;
+  }
+
   if (project_id) findQuery.project = project_id;
 
-  const result = await TimeSheetModel.find(findQuery)
-    .populate("created_by", "name image_url")
-    .populate("task", "name task_id description status priority");
+  const assignesTask = await TaskModel.find({
+    assigners: { $in: [session?.user?.user_id] },
+  })
+
+  const taskIds = assignesTask.map((task) => task._id);
+
+  if (taskIds.length > 0) {
+    findQuery.task = { $in: taskIds };
+  }
+
+  const result = await TimeSheetModel.find(findQuery).select(
+    "date duration task"
+  );
+
+  const assignesTaskWithTimeSheet: any = assignesTask.map((task) => {
+    const taskData = { ...task._doc };
+    return {
+      ...taskData,
+      timesheet: result.filter(
+        (t) => t.task.toString() === taskData._id.toString()
+      ),
+    };
+  });
+
+  // getDatesBetween(
+  //   start_date || new Date().toISOString(),
+  //   end_date || new Date().toISOString()
+  // )
+  // return NextResponse.json({
+  //   result: assignesTaskWithTimeSheet
+  // });
+
   return NextResponse.json({
     result:
       response_type === "daywise"
         ? groupTasksByDateLast7Days(result)
         : response_type === "timeline"
-        ? transformTimesheetData(
-            result,
-            getDatesBetween(
-              start_date || new Date().toISOString(),
-              end_date || new Date().toISOString()
-            )
+        ? generateTimesheetResponse(
+            assignesTaskWithTimeSheet,
+            start_date,
+            end_date
           )
         : result,
   });

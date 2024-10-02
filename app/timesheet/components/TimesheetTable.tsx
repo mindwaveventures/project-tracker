@@ -13,6 +13,7 @@ import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import TimePicker from "@/components/ui/timepicker"; // Adjust the import path as needed
 import { AddTask } from "./AddTask";
+import moment from "moment";
 
 interface TimesheetTableProps {
   tasks: any[];
@@ -68,7 +69,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
             <TableCell className="border border-gray-300">
               {task.category}
             </TableCell>
-            {days.map((day) => {
+            {days.map((day, dayIndex) => {
               const dayStr = format(day, "yyyy-MM-dd");
               return (
                 <TableCell
@@ -79,6 +80,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
                     onTimeChange={(newTime) =>
                       handleTimeChange(task.task_id, dayStr, newTime)
                     }
+                    addedHours={task.hours[`${moment(new Date(day)).format("YYYY-MM-DD")}`]}
                   />
                 </TableCell>
               );

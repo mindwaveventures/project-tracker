@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import {
@@ -18,6 +18,7 @@ import BillingFilter from "./components/BillingFilter";
 import TimesheetTable from "./components/TimesheetTable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import moment from "moment";
 
 // Task data
 const timesheetData = {
@@ -64,10 +65,11 @@ const getDatesForView = (date: Date, view: string) => {
 const Timesheet = () => {
   const [view, setView] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tasks, setTasks] = useState(timesheetData.tasks);
+  const [tasks, setTasks] = useState<[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
+  const [dateRangeArray, setDateRangeArray] = useState<[]>([]);
 
   const categories = ["Brook", "MAIA"]; // Dynamic categories based on projects
   const billingTypes = ["Billable", "Non-billable"];
@@ -79,12 +81,28 @@ const Timesheet = () => {
     setView(view);
   };
 
-  const filteredTasks = tasks.filter(
-    (task) =>
-      task.task_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (categoryFilter === "" || task.category === categoryFilter) &&
-      (billingFilter === "" || task.billing_type === billingFilter)
-  );
+  useEffect(() => {
+    const fetchMyTasks = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/timesheet?response_type=timeline&start_date=2024-08-24&end_date=2024-08-30`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setTasks(data?.result?.tasks);
+        setDateRangeArray(data.result?.dates)
+      } catch (error: any) {
+        console.log("error", error);
+
+        // setError(error.message);
+      }
+    };
+    console.log("get my task detail");
+
+    fetchMyTasks();
+  }, []); // Add id as a dependency to re-fetch data if it changes
 
   const days = getDatesForView(selectedDate, view);
 
@@ -154,7 +172,7 @@ const Timesheet = () => {
                 aria-label="View Options"
                 className="flex space-x-2"
               >
-                <ToggleGroupItem
+                {/* <ToggleGroupItem
                   value="month"
                   aria-label="Month View"
                   className={cn(
@@ -164,7 +182,7 @@ const Timesheet = () => {
                   onClick={() => handleViewChange("month")}
                 >
                   Month
-                </ToggleGroupItem>
+                </ToggleGroupItem> */}
                 <ToggleGroupItem
                   value="week"
                   aria-label="Week View"
@@ -192,12 +210,14 @@ const Timesheet = () => {
           </div>
         </div>
         {/* Timesheet Table */}
-        <TimesheetTable
-          tasks={filteredTasks}
-          days={days}
-          handleTimeChange={handleTimeChange}
-          handleTaskSelect={handleTaskSelect}
-        />
+        {tasks && tasks.length > 0 && (
+          <TimesheetTable
+            tasks={tasks}
+            days={dateRangeArray.map((d) => moment(new Date(d)).toDate())}
+            handleTimeChange={handleTimeChange}
+            handleTaskSelect={handleTaskSelect}
+          />
+        )}
       </div>
     </div>
   );

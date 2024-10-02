@@ -40,7 +40,7 @@ const TaskerSchema = new Schema(
       ref: 'user'
     },
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false }
 );
 
 const TaskModel = models.task || model("task", TaskerSchema);

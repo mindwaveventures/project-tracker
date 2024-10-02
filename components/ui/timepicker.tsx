@@ -3,9 +3,10 @@ import { Input } from "@/components/ui/input";
 
 interface TimePickerProps {
   onTimeChange: (newTime: string) => void; // Callback to pass time back to parent
+  addedHours: Number
 }
 
-const TimePicker: React.FC<TimePickerProps> = ({ onTimeChange }) => {
+const TimePicker: React.FC<TimePickerProps> = ({ onTimeChange, addedHours = 0 }) => {
   const [time, setTime] = useState<string>("");
 
   // Function to handle input changes
@@ -47,7 +48,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ onTimeChange }) => {
   return (
     <div className="flex flex-col space-y-2">
       <Input
-        placeholder="+ 1h 30m"
+        placeholder={`${addedHours}`}
         value={time} // Show raw input so the user can type freely
         onChange={handleInputChange} // Handle user input
         onBlur={() => setTime(formatTimeValue(time))} // Format time on blur
