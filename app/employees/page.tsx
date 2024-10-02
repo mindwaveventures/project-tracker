@@ -51,36 +51,39 @@ export default function ExployeesCard() {
     <div className="container mx-auto py-10">
       <h2 className="text-2xl font-bold mb-6">Our Team</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {users.length > 0 && users.map((employee) => (
-          <Card key={employee._id}>
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center">
-                <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src={employee.image_url} alt={employee.name} />
-                  <AvatarFallback>
-                    {employee.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <h3 className="text-lg font-semibold mb-1">{employee.name}</h3>
-                {/* <p className="text-sm text-muted-foreground mb-2">
-                  
+        {users.length > 0 &&
+          users.map((employee) => (
+            <Card key={employee._id}>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center">
+                  <Avatar className="h-24 w-24 mb-4">
+                    <AvatarImage src={employee.image_url} alt={employee.name} />
+                    <AvatarFallback>
+                      {employee.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h3 className="text-lg font-semibold mb-1">
+                    {employee.name}
+                  </h3>
+                  {/* <p className="text-sm text-muted-foreground mb-2">
+
                 </p> */}
-                <Badge variant="secondary" className="mb-2">
-                  {employee.role?.name}
-                </Badge>
-                <a
-                  href={`mailto:${employee.email}`}
-                  className="text-sm text-primary hover:underline"
-                >
-                  {employee.email}
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <Badge variant="secondary" className="mb-2">
+                    {employee.role?.name}
+                  </Badge>
+                  <a
+                    href={`mailto:${employee.email}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {employee.email}
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
       </div>
     </div>
   );

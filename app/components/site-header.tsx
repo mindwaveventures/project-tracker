@@ -35,20 +35,7 @@ export default function SiteHeader() {
             <SearchIcon className="w-6 h-6" />
             <span className="sr-only">Acme Inc</span>
           </Link>
-          <Link
-            className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-            href="#"
-          >
-            Home
-          </Link>
-          <Link
-            className={`text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ${
-              pathname === "/about" ? "text-primary" : ""
-            }`}
-            href="#"
-          >
-            About
-          </Link>
+
           <Link
             className={`text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ${
               pathname.includes("projects") ? "text-primary" : ""
@@ -64,6 +51,22 @@ export default function SiteHeader() {
             href="/employees"
           >
             Employees
+          </Link>
+          <Link
+            className={`text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ${
+              pathname === "/roles" ? "text-primary" : ""
+            }`}
+            href="/roles"
+          >
+            Roles
+          </Link>
+          <Link
+            className={`text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ${
+              pathname === "/timesheet" ? "text-primary" : ""
+            }`}
+            href="/timesheet"
+          >
+            Timesheet
           </Link>
         </nav>
         <div className="flex items-center gap-4 md:gap-2 lg:gap-4">

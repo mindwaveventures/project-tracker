@@ -16,6 +16,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const columns: ColumnDef<Task>[] = [
   {
@@ -56,13 +63,22 @@ export const columns: ColumnDef<Task>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Title" />
     ),
+    cell: ({ row }) => <div className="w-[80px]">{row.getValue("name")}</div>,
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "des",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Descption" />
+    ),
     cell: ({ row }) => {
       const label = labels.find((label) => label.value === row.original.label);
       return (
         <div className="flex space-x-2">
           {label && <Badge variant="outline">{label.label}</Badge>}
           <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("name")}
+            {row.getValue("des")}
           </span>
           <div className="flex items-start -space-x-1">
             {row.original.assigners &&
@@ -91,27 +107,39 @@ export const columns: ColumnDef<Task>[] = [
       );
     },
   },
+
   {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      );
-
-      if (!status) {
-        return null;
-      }
+      const currentStatus = row.getValue("status");
 
       return (
-        <div className="flex w-[100px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
-        </div>
+        <Select
+          defaultValue={currentStatus}
+          onValueChange={(newStatus) => {
+            // Update the status value in your state/store
+            row.original.status = newStatus; // Update logic here based on your state management
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statuses.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                <div className="flex items-center">
+                  {status.icon && (
+                    <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                  )}
+                  {status.label}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     },
     filterFn: (row, id, value) => {
@@ -124,21 +152,32 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Priority" />
     ),
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      );
-
-      if (!priority) {
-        return null;
-      }
+      const currentPriority = row.getValue("priority");
 
       return (
-        <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{priority.label}</span>
-        </div>
+        <Select
+          defaultValue={currentPriority}
+          onValueChange={(newPriority) => {
+            // Update the priority value in your state/store
+            row.original.priority = newPriority; // Update logic here based on your state management
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select priority" />
+          </SelectTrigger>
+          <SelectContent>
+            {priorities.map((priority) => (
+              <SelectItem key={priority.value} value={priority.value}>
+                <div className="flex items-center">
+                  {priority.icon && (
+                    <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                  )}
+                  {priority.label}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     },
     filterFn: (row, id, value) => {

@@ -4,6 +4,17 @@ import { z } from "zod";
 import { DataTable } from "@/app/components/task/components/data-table";
 import { columns } from "@/app/components/task/components/columns";
 import { useEffect, useState } from "react";
+import AddTaskForm from "@/app/components/task/components/add-task-form";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "@radix-ui/react-icons";
 
 const assignerSchema = z.object({
   _id: z.string(), // Assigner _id
@@ -60,14 +71,14 @@ export default function TaskPage({ params }: { params: { id: string } }) {
   const [responseData, setResponsedata] = useState<ResponseInterface>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    // Fetching users from an API
     const fetchUsers = async () => {
       try {
         const response = await fetch(
           `http://localhost:3000/api/project?include=task&project_id=${id}`
-        ); // Example API
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -92,14 +103,22 @@ export default function TaskPage({ params }: { params: { id: string } }) {
     };
 
     fetchUsers();
-  }, []);
+  }, [id]); // Add id as a dependency to re-fetch data if it changes
+
+  // Function to handle new task submission
+  const handleTaskCreated = (newTask: ITask) => {
+    setResponsedata((prevData) => ({
+      ...prevData,
+      tasks: [...prevData.tasks, newTask], // Add the new task to the tasks array
+    }));
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <>
-      <div className="md:hidden">
+      {/* <div className="md:hidden">
         <Image
           src="/examples/tasks-light.png"
           width={1280}
@@ -114,15 +133,41 @@ export default function TaskPage({ params }: { params: { id: string } }) {
           alt="Playground"
           className="hidden dark:block"
         />
-      </div>
+      </div> */}
       <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
         <div className="flex items-center justify-between space-y-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">{responseData?.project?.name}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {responseData?.project?.name}
+            </h2>
             <p className="text-muted-foreground">
-              Here&apos;s a list of your tasks for this month!
+              Here's a list of your tasks for this month!
             </p>
           </div>
+
+          {/* Add New Task Button */}
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setOpenDialog(true)}>
+                <PlusIcon className="mr-2 h-4 w-4" /> Add New Task
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Task</DialogTitle>
+                <DialogDescription>
+                  Fill in the details to create a new task.
+                </DialogDescription>
+              </DialogHeader>
+
+              <AddTaskForm
+                onTaskCreated={handleTaskCreated}
+                closeDialog={() => setOpenDialog(false)}
+              />
+            </DialogContent>
+          </Dialog>
+          {/* Pass the handler */}
         </div>
         {responseData?.tasks && (
           <DataTable data={responseData.tasks} columns={columns} />
