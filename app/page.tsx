@@ -79,26 +79,30 @@ export default function Home() {
             MEDIWAVE
           </div>
           <div className="relative z-20 mt-auto">
-            <blockquote className="space-y-2">
+            {/* <blockquote className="space-y-2">
               <p className="text-lg">
-                &ldquo;Innovative digital transformation strategies for modern businesses.&rdquo;
+                &ldquo;Innovative digital transformation strategies for modern
+                businesses.&rdquo;
               </p>
-              {/* <footer className="text-sm">Sofia Davis</footer> */}
-            </blockquote>
+              <footer className="text-sm">Sofia Davis</footer>
+            </blockquote> */}
           </div>
         </div>
         <div className="lg:p-8">
-          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-            <div className="flex flex-col space-y-2 text-center">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-7 sm:w-[350px]">
+            <div className="flex flex-col space-y-4 text-center">
               <h1 className="text-2xl font-semibold tracking-tight">
-                Log your time on single click
+                Sign in to Weekdays
               </h1>
               <p className="text-sm text-muted-foreground">
-                Enter your email below to create your account
+                We suggest using the official email address that you use at
+                work.
               </p>
-              <Button onClick={() => signIn("google")}>Signin with google</Button>
             </div>
-            <p className="px-8 text-center text-sm text-muted-foreground">
+            <Button onClick={() => signIn("google")}>
+              Sign in with google
+            </Button>
+            {/* <p className="px-8 text-center text-sm text-muted-foreground">
               By clicking continue, you agree to our{" "}
               <Link
                 href="/terms"
@@ -114,7 +118,7 @@ export default function Home() {
                 Privacy Policy
               </Link>
               .
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
