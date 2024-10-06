@@ -23,6 +23,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TaskAssigner } from "./user-assigner";
+
+// Function to update task in your state/store (adjust this based on your state management)
+const updateTaskStatus = (taskId: number, newStatus: string) => {
+  // Logic to update the task's status in your state or store
+  console.log(`Update task ${taskId} status to ${newStatus}`);
+};
+
+const updateTaskPriority = (taskId: number, newPriority: string) => {
+  // Logic to update the task's priority in your state or store
+  console.log(`Update task ${taskId} priority to ${newPriority}`);
+};
 
 export const columns: ColumnDef<Task>[] = [
   {
@@ -64,48 +76,18 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Title" />
     ),
     cell: ({ row }) => <div className="w-[80px]">{row.getValue("name")}</div>,
+    filterFn: (row, id, value) =>
+      row.getValue(id)?.toLowerCase().includes(value.toLowerCase()), // Filtering logic
     enableSorting: false,
     enableHiding: false,
   },
+
   {
-    accessorKey: "des",
+    accessorKey: "assigners",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Descption" />
+      <DataTableColumnHeader column={column} title="Assigners" />
     ),
-    cell: ({ row }) => {
-      const label = labels.find((label) => label.value === row.original.label);
-      return (
-        <div className="flex space-x-2">
-          {label && <Badge variant="outline">{label.label}</Badge>}
-          <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("des")}
-          </span>
-          <div className="flex items-start -space-x-1">
-            {row.original.assigners &&
-              row.original.assigners.length > 0 &&
-              row.original.assigners.map((us: any) => (
-                <TooltipProvider key={Math.random()}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Avatar className="w-6 h-6 ">
-                        <AvatarImage
-                          src={us.image_url}
-                          alt={us.name}
-                          className="w-6 h-6"
-                        />
-                        <AvatarFallback>{us.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{us.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-          </div>
-        </div>
-      );
-    },
+    cell: ({ row }) => <TaskAssigner row={row} />, // Use the new AssignersColumn
   },
 
   {
@@ -120,8 +102,7 @@ export const columns: ColumnDef<Task>[] = [
         <Select
           defaultValue={currentStatus}
           onValueChange={(newStatus) => {
-            // Update the status value in your state/store
-            row.original.status = newStatus; // Update logic here based on your state management
+            updateTaskStatus(row.original.id, newStatus);
           }}
         >
           <SelectTrigger>
@@ -142,9 +123,7 @@ export const columns: ColumnDef<Task>[] = [
         </Select>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: "priority",
@@ -158,8 +137,7 @@ export const columns: ColumnDef<Task>[] = [
         <Select
           defaultValue={currentPriority}
           onValueChange={(newPriority) => {
-            // Update the priority value in your state/store
-            row.original.priority = newPriority; // Update logic here based on your state management
+            updateTaskPriority(row.original.id, newPriority);
           }}
         >
           <SelectTrigger>
@@ -180,9 +158,7 @@ export const columns: ColumnDef<Task>[] = [
         </Select>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     id: "actions",

@@ -7,14 +7,14 @@ const TaskerSchema = new Schema(
     },
     task_id: {
       type: String,
-      unique: true,  // Enforce uniqueness for task_id
+      unique: true, // Enforce uniqueness for task_id
     },
     description: {
       type: String,
     },
     status: {
       type: String,
-      default: 'active', // Set default value to 'active' and 'inactive'
+      default: "active", // Set default value to 'active' and 'inactive'
     },
     start_end: {
       type: Date,
@@ -29,7 +29,7 @@ const TaskerSchema = new Schema(
     },
     project: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'project'
+      ref: "project",
     },
     assigners: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
@@ -37,7 +37,7 @@ const TaskerSchema = new Schema(
     },
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
+      ref: "user",
     },
   },
   { timestamps: true, versionKey: false }

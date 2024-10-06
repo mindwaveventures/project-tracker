@@ -1,9 +1,7 @@
-"use client"
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { Row } from "@tanstack/react-table";
 
-import { DotsHorizontalIcon } from "@radix-ui/react-icons"
-import { Row } from "@tanstack/react-table"
-
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,19 +14,27 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
-import { labels } from "../data/data"
-import { taskSchema } from "../data/schema"
+import { labels } from "../data/data";
+import { taskSchema } from "../data/schema";
 
 interface DataTableRowActionsProps<TData> {
-  row: Row<TData>
+  row: Row<TData>;
 }
 
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
-  const task = taskSchema.parse(row.original)
+  let task;
+
+  try {
+    // Attempt to parse the row data using the schema
+    task = taskSchema.parse(row.original);
+  } catch (error) {
+    console.error("Error parsing task:", error);
+    return null; // Return null if validation fails to prevent rendering undefined values
+  }
 
   return (
     <DropdownMenu>
@@ -49,13 +55,16 @@ export function DataTableRowActions<TData>({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={task.label}>
-              {labels.map((label) => (
-                <DropdownMenuRadioItem key={label.value} value={label.value}>
-                  {label.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+            {/* Ensure task.label exists before rendering */}
+            {task && task.label && (
+              <DropdownMenuRadioGroup value={task.label}>
+                {labels.map((label) => (
+                  <DropdownMenuRadioItem key={label.value} value={label.value}>
+                    {label.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            )}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
@@ -65,5 +74,5 @@ export function DataTableRowActions<TData>({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import AssignersList from "../../../components/AssignersList";
+import AssignersList from "../../../components/AssignersList"; // Ensure the correct path
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { priorities } from "../data/data";
+import { useParams } from "react-router-dom"; // Import to handle dynamic taskId from route
 
 // Define the validation schema using zod
 const taskSchema = z.object({
@@ -22,20 +23,28 @@ const taskSchema = z.object({
   description: z.string().min(1, "Description is required"),
   priority: z.string().min(1, "Priority is required"),
   assigners: z.array(z.string()).min(1, "At least one assigner is required"),
+  project: z.string().min(1, "Project is required"),
+  billing_type: z.string().min(1, "Billing type is required"),
 });
 
 interface AddTaskFormProps {
-  onTaskCreated: (task: ITask) => void; // Define the prop type
+  onTaskCreated: (task: ITask) => void;
 }
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
 export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
+  const [projects, setProjects] = useState<{ _id: string; name: string }[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+
+  const { taskId } = useParams(); // Get dynamic taskId from URL
+
   const {
     handleSubmit,
     control,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -43,16 +52,65 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
       description: "",
       priority: "",
       assigners: [],
+      project: "",
+      billing_type: "",
     },
   });
 
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Fetch projects
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/project?include=task"
+        );
+        const data = await response.json();
+        if (data.result) {
+          setProjects(data.result);
+          if (data.result.length > 0) {
+            const defaultProject = data.result[0];
+            setSelectedProject(defaultProject._id);
+            setValue("project", defaultProject._id);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch project details:", error);
+      }
+    };
+    fetchProjects();
+
+    // Fetch task details if editing (using taskId)
+    if (taskId) {
+      const fetchTaskDetails = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/task/${taskId}`
+          );
+          const taskData = await response.json();
+          if (taskData) {
+            setValue("name", taskData.name);
+            setValue("description", taskData.description);
+            setValue("priority", taskData.priority);
+            setValue("assigners", taskData.assigners);
+            setValue("project", taskData.project);
+            setValue("billing_type", taskData.billing_type);
+          }
+        } catch (error) {
+          console.error("Failed to fetch task details:", error);
+        }
+      };
+      fetchTaskDetails();
+    }
+  }, [taskId, setValue]);
+
   const onSubmit = async (data: TaskFormValues) => {
-    console.log("Submitting data:", data);
+    const url = "http://localhost:3000/api/task"; // Always create a new task with POST
+
     try {
-      const response = await fetch("http://localhost:3000/api/task", {
-        method: "POST",
+      const response = await fetch(url, {
+        method: "POST", // Always use POST for task creation
         headers: {
           "Content-Type": "application/json",
         },
@@ -60,20 +118,26 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create task");
+        const errorResponse = await response.json();
+        throw new Error(JSON.stringify(errorResponse));
       }
-      const newTask: ITask = await response.json(); // Assuming the response contains the new task data
-      onTaskCreated(newTask); // Call the prop function to update tasks
+
+      const task = await response.json();
+      onTaskCreated(task);
       toast({ title: "Task created successfully!" });
       reset();
-    } catch (error) {
-      toast({ title: "Error creating task", description: error.message });
+    } catch (error: any) {
+      console.error("Error creating task:", error);
+      toast({
+        title: "Error creating task",
+        description: error.message,
+      });
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Task Name Input */}
+      {/* Task Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Task Name
@@ -94,7 +158,7 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
         )}
       </div>
 
-      {/* Description Input */}
+      {/* Description */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Description
@@ -115,7 +179,7 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
         )}
       </div>
 
-      {/* Priority Input (Select Dropdown) */}
+      {/* Priority */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Priority
@@ -143,7 +207,60 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
         )}
       </div>
 
-      {/* Assigners Input (Using AssignersList Component) */}
+      {/* Project */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Project
+        </label>
+        <Controller
+          name="project"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project._id} value={project._id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.project && (
+          <p className="text-red-500 text-sm">{errors.project.message}</p>
+        )}
+      </div>
+
+      {/* Billing Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Billing Type
+        </label>
+        <Controller
+          name="billing_type"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select billing type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="billing">Billing</SelectItem>
+                <SelectItem value="non_billing">Non-billing</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.billing_type && (
+          <p className="text-red-500 text-sm">{errors.billing_type.message}</p>
+        )}
+      </div>
+
+      {/* Assigners */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Assigners
@@ -152,7 +269,11 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
           name="assigners"
           control={control}
           render={({ field }) => (
-            <AssignersList value={field.value} onChange={field.onChange} />
+            <AssignersList
+              value={field.value} // Ensure this holds an array of selected assigners
+              onChange={field.onChange} // This should properly update the form with selected assigners
+              taskId={taskId}
+            />
           )}
         />
         {errors.assigners && (
@@ -160,9 +281,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
         )}
       </div>
 
-      {/* Submit Button */}
-      <Button type="submit" className="mt-4">
-        Create Task
+      {/* Button Label based on taskId */}
+      <Button type="submit">
+        {taskId ? "Update Task" : "Create Task"} {/* Conditional label */}
       </Button>
     </form>
   );

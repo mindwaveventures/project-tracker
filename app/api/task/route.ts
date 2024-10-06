@@ -8,7 +8,7 @@ import ProjectModel from "@/app/model/projects";
 
 function generateTaskId(prefix: string, taskNumber: number) {
   // Pad the task number with leading zeros to ensure it has 6 digits
-  const paddedNumber = String(taskNumber).padStart(6, '0');
+  const paddedNumber = String(taskNumber).padStart(6, "0");
   // Concatenate the prefix with the padded number
   return `${prefix}-${paddedNumber}`;
 }
@@ -36,7 +36,9 @@ export async function GET() {
   }
 
   await connectToMongoDB();
-  const result = await TaskModel.find({}).populate("assigners", "name").populate('project', 'name');
+  const result = await TaskModel.find({})
+    .populate("assigners", "name")
+    .populate("project", "name");
   return NextResponse.json({
     result: result,
   });
@@ -57,16 +59,25 @@ export async function POST(request: NextRequest) {
   }
 
   await connectToMongoDB();
-  
-  const getProjectDetail = await ProjectModel.findOne({_id: validation.data.project});
-  
-  if (!getProjectDetail){
-    return NextResponse.json({msg: 'Project id is invalid'}, { status: 400 });
-  }
-  
-  const getCount = await TaskModel.countDocuments({project: validation.data.project});
 
-  const saveData = await TaskModel.create({...validation.data, task_id: generateTaskId(getProjectDetail.code, getCount + 1), created_by: session?.user?.user_id});
+  const { project } = validation.data;
+
+  // Fetch project details and validate it
+  const getProjectDetail = await ProjectModel.findOne({ _id: project });
+
+  if (!getProjectDetail) {
+    return NextResponse.json({ msg: "Project id is invalid" }, { status: 400 });
+  }
+
+  // Count the number of existing tasks for this project to generate task ID
+  const getCount = await TaskModel.countDocuments({ project });
+
+  // Create the new task with all required data
+  const saveData = await TaskModel.create({
+    ...validation.data,
+    task_id: generateTaskId(getProjectDetail.code, getCount + 1),
+    created_by: session?.user?.user_id,
+  });
 
   if (saveData) {
     return NextResponse.json({ result: saveData }, { status: 201 });

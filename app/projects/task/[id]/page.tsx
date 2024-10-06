@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { Skeleton } from "@/components/ui/skeleton"; // Assuming you have a Skeleton component
 
 const assignerSchema = z.object({
   _id: z.string(), // Assigner _id
@@ -72,20 +73,23 @@ export default function TaskPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to track form submission
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/project?include=task&project_id=${id}`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setResponsedata({
-          ...data.result,
-          tasks: data.result.tasks.map((data: ITask) => ({
+  // Function to fetch tasks from the API
+  const fetchData = async () => {
+    setLoading(true); // Set loading to true before fetching
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/project?include=task&project_id=${id}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setResponsedata({
+        ...data.result,
+        tasks: data.result.tasks
+          .map((data: ITask) => ({
             ...data,
             id: data.task_id,
             title:
@@ -93,47 +97,55 @@ export default function TaskPage({ params }: { params: { id: string } }) {
             status: data.status,
             label: "documentation",
             priority: data.priority,
-          })),
-        });
-      } catch (error: any) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [id]); // Add id as a dependency to re-fetch data if it changes
-
-  // Function to handle new task submission
-  const handleTaskCreated = (newTask: ITask) => {
-    setResponsedata((prevData) => ({
-      ...prevData,
-      tasks: [...prevData.tasks, newTask], // Add the new task to the tasks array
-    }));
+          }))
+          .sort(
+            (a: ITask, b: ITask) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          ), // Sort by createdAt to ensure the latest task is first
+      });
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false); // Set loading to false after fetch
+    }
   };
 
-  if (loading) return <p>Loading...</p>;
+  useEffect(() => {
+    fetchData(); // Fetch data on initial render or when `id` changes
+  }, [id]); // Removed isSubmitting to avoid unnecessary re-fetching
+
+  // Function to handle new task submission
+  const handleTaskCreated = async (newTask: ITask) => {
+    setIsSubmitting(true); // Set submitting state to true
+    try {
+      // Create the new task in the backend
+      await fetch("http://localhost:3000/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTask),
+      });
+
+      // Re-fetch the tasks after creating a new task
+      await fetchData();
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsSubmitting(false); // Set submitting state to false
+      closeDialog(); // Close the dialog when task creation is successful
+    }
+  };
+
+  function closeDialog() {
+    setOpenDialog(false); // Close the dialog when triggered
+  }
+
+  if (loading) return <Skeleton className="h-40 w-full" />; // Show skeleton loader while loading
   if (error) return <p>Error: {error}</p>;
 
   return (
     <>
-      {/* <div className="md:hidden">
-        <Image
-          src="/examples/tasks-light.png"
-          width={1280}
-          height={998}
-          alt="Playground"
-          className="block dark:hidden"
-        />
-        <Image
-          src="/examples/tasks-dark.png"
-          width={1280}
-          height={998}
-          alt="Playground"
-          className="hidden dark:block"
-        />
-      </div> */}
       <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
         <div className="flex items-center justify-between space-y-2">
           <div>
@@ -167,10 +179,12 @@ export default function TaskPage({ params }: { params: { id: string } }) {
               />
             </DialogContent>
           </Dialog>
-          {/* Pass the handler */}
         </div>
-        {responseData?.tasks && (
+
+        {responseData?.tasks ? (
           <DataTable data={responseData.tasks} columns={columns} />
+        ) : (
+          <Skeleton className="h-40 w-full" /> // Show skeleton loader if tasks are not available
         )}
       </div>
     </>
