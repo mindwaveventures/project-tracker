@@ -1,47 +1,28 @@
-// mark as client component
 "use client";
 
 import { Button } from "@/components/ui/button";
-// importing necessary functions
-import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
-  // extracting data from usesession as session
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // checking if sessions exists
-  if (session) {
-    // rendering components for logged in users
-    return (
-      <div className="w-full h-screen flex flex-col justify-center items-center">
-        <div className="w-44 h-44 relative mb-4">
-          <Image
-            src={session.user?.image as string}
-            fill
-            alt=""
-            className="object-cover rounded-full"
-          />
-        </div>
-        <p className="text-2xl mb-2">
-          Welcome <span className="font-bold">{session.user?.name}</span>.
-          Signed In As
-        </p>
-        <p className="font-bold mb-4">{session.user?.email}</p>
-        <p className="font-bold mb-4">{session.user.role}</p>
-        <button
-          className="bg-red-600 py-2 px-6 rounded-md"
-          onClick={() => signOut()}
-        >
-          Sign out
-        </button>
-      </div>
-    );
+  // If the user is already logged in, redirect to dashboard
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard"); // Redirect to the dashboard
+    }
+  }, [status, router]);
+
+  // Show a loading state while session status is being fetched
+  if (status === "loading") {
+    return <div>Loading...</div>;
   }
 
-  // rendering components for not logged in users
   return (
     <>
       <div className="md:hidden">
@@ -78,15 +59,7 @@ export default function Home() {
             </svg>
             MEDIWAVE
           </div>
-          <div className="relative z-20 mt-auto">
-            {/* <blockquote className="space-y-2">
-              <p className="text-lg">
-                &ldquo;Innovative digital transformation strategies for modern
-                businesses.&rdquo;
-              </p>
-              <footer className="text-sm">Sofia Davis</footer>
-            </blockquote> */}
-          </div>
+          <div className="relative z-20 mt-auto"></div>
         </div>
         <div className="lg:p-8">
           <div className="mx-auto flex w-full flex-col justify-center space-y-7 sm:w-[350px]">
@@ -100,25 +73,8 @@ export default function Home() {
               </p>
             </div>
             <Button onClick={() => signIn("google")}>
-              Sign in with google
+              Sign in with Google
             </Button>
-            {/* <p className="px-8 text-center text-sm text-muted-foreground">
-              By clicking continue, you agree to our{" "}
-              <Link
-                href="/terms"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p> */}
           </div>
         </div>
       </div>

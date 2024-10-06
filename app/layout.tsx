@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionWrapper from "./components/SessionWrapper";
 import SiteHeader from "./components/site-header";
 import { Toaster } from "@/components/ui/toaster";
+import Sidebar from "./components/layout/sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <body className={inter.className}>
           <Toaster />
           <SiteHeader />
+          <Sidebar />
           {children}
         </body>
       </html>
