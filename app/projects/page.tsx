@@ -8,6 +8,9 @@ import { Search } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import ProjectListCard from "../components/ProjectListCard";
+import SearchBar from "@/components/ui/search"; // Make sure to import your SearchBar component
+import PageContainer from "../components/layout/page-container";
+import ProjectSkeletonLoader from "../../components/ui/skeleton-project";
 
 interface Projects {
   _id: string;
@@ -21,27 +24,26 @@ interface Projects {
     }
   ];
   status: string;
-  taskCount: Number;
+  taskCount: number;
   createdAt: string;
 }
 
 export default function ExployeesCard() {
   const [project, setProject] = useState<Projects[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Searching for:", searchQuery);
-    // Implement your search logic here
+  const handleSearch = (query: string) => {
+    setSearchQuery(query); // Update search query state when the user types
   };
 
   useEffect(() => {
     // Fetching users from an API
-    const fetchUsers = async () => {
+    const fetchProjects = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/project"); // Example API
+        setLoading(true);
+        const response = await fetch("http://localhost:3000/api/project");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -54,62 +56,51 @@ export default function ExployeesCard() {
       }
     };
 
-    fetchUsers();
+    fetchProjects();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <ProjectSkeletonLoader />;
   if (error) return <p>Error: {error}</p>;
+
+  // Filter projects by the search query
+  const filteredProjects = project.filter((proj) =>
+    proj.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
-      <div className="w-full bg-primary py-24">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-white text-center mb-8">
-            Find What Youre Looking For
-          </h1>
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-4">
-              <Input
-                type="text"
-                placeholder="Search for anything..."
-                className="flex-grow text-lg py-6 px-4 rounded-lg"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Button
-                type="submit"
-                size="lg"
-                className="bg-white text-purple-600 hover:bg-gray-100"
-              >
-                <Search className="mr-2 h-5 w-5" />
-                Search
-              </Button>
-            </div>
-          </form>
-          <p className="text-white text-center mt-6">
-            Popular searches: Web Design, JavaScript, React, Next.js
-          </p>
+      <PageContainer>
+        <div className="container mx-auto">
+          <h2 className="text-2xl font-bold mb-6">Our Projects</h2>
+
+          {/* SearchBar Component */}
+          <SearchBar
+            value={searchQuery}
+            onChange={handleSearch} // Call handleSearch when the search input changes
+            className="mb-8 w-full md:w-1/2 lg:w-1/3" // Add custom styles
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProjects.length > 0 ? (
+              filteredProjects.map((project) => (
+                <React.Fragment key={project._id}>
+                  <ProjectListCard
+                    id={project._id}
+                    projectName={project.name}
+                    createdBy={{
+                      name: project.assigners[0].name,
+                      avatarUrl: project.assigners[0].image_url || "-",
+                    }}
+                    taskCount={project.taskCount}
+                  />
+                </React.Fragment>
+              ))
+            ) : (
+              <p>No projects found</p>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="container mx-auto py-10">
-        <h2 className="text-2xl font-bold mb-6">Our Projects</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
-          {project.length > 0 &&
-            project.map((project) => (
-              <React.Fragment key={Math.random()}>
-                <ProjectListCard
-                  id={project._id}
-                  projectName={project.name}
-                  createdBy={{
-                    name: project.assigners[0].name,
-                    avatarUrl: project.assigners[0].image_url || '-'
-                  }}
-                  taskCount={project.taskCount}
-                />
-              </React.Fragment>
-            ))}
-        </div>
-      </div>
+      </PageContainer>
     </>
   );
 }

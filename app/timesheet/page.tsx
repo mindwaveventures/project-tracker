@@ -19,34 +19,8 @@ import TimesheetTable from "./components/TimesheetTable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import moment from "moment";
-
-// Task data
-const timesheetData = {
-  tasks: [
-    {
-      task_id: 1,
-      task_name: "Task A",
-      category: "Brook",
-      billing_type: "Billable",
-      hours: {
-        "2024-09-25": "04:00",
-        "2024-09-26": "05:00",
-        "2024-09-27": "03:00",
-      },
-    },
-    {
-      task_id: 2,
-      task_name: "Task B",
-      category: "MAIA",
-      billing_type: "Non-billable",
-      hours: {
-        "2024-09-25": "02:00",
-        "2024-09-26": "06:00",
-        "2024-09-27": "04:00",
-      },
-    },
-  ],
-};
+import PageContainer from "../components/layout/page-container";
+import SkeletonTablePage from "@/components/ui/skeleton-table-page";
 
 const getDatesForView = (date: Date, view: string) => {
   if (view === "week") {
@@ -70,6 +44,7 @@ const Timesheet = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [billingFilter, setBillingFilter] = useState("");
   const [dateRangeArray, setDateRangeArray] = useState<[]>([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   const categories = ["Brook", "MAIA"]; // Dynamic categories based on projects
   const billingTypes = ["Billable", "Non-billable"];
@@ -84,6 +59,7 @@ const Timesheet = () => {
   useEffect(() => {
     const fetchMyTasks = async () => {
       try {
+        setLoading(true); // Set loading to true before fetching
         const response = await fetch(
           `http://localhost:3000/api/timesheet?response_type=timeline&start_date=2024-08-24&end_date=2024-08-30`
         );
@@ -92,11 +68,11 @@ const Timesheet = () => {
         }
         const data = await response.json();
         setTasks(data?.result?.tasks);
-        setDateRangeArray(data.result?.dates)
+        setDateRangeArray(data.result?.dates);
       } catch (error: any) {
         console.log("error", error);
-
-        // setError(error.message);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
     };
     console.log("get my task detail");
@@ -107,7 +83,6 @@ const Timesheet = () => {
   const days = getDatesForView(selectedDate, view);
 
   const handleTaskSelect = (selectedTask: string) => {
-    // Add new task to the task list
     const newTask = {
       task_id: tasks.length + 1,
       task_name: selectedTask,
@@ -137,89 +112,84 @@ const Timesheet = () => {
     setTasks(updatedTasks);
   };
 
+  if (loading) {
+    return <SkeletonTablePage />; // Render loader when loading
+  }
+
   return (
-    <div className="flex flex-col gap-5 w-full p-4">
-      <h2 className="text-2xl font-bold">Timesheet</h2>
-      <div className="flex flex-col gap-2">
-        {/* Search and Filters */}
-        <div className="flex justify-between mb-4 gap-4">
-          <div className="relative w-1/3">
-            <Input
-              placeholder="Search Task"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10"
+    <PageContainer>
+      <div className="flex flex-col gap-5 w-full">
+        <h2 className="text-2xl font-bold">Timesheet</h2>
+        <div className="flex flex-col gap-2">
+          {/* Search and Filters */}
+          <div className="flex justify-between mb-4 gap-4">
+            <div className="relative w-1/3">
+              <Input
+                placeholder="Search Task"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10"
+              />
+              <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex space-x-4">
+                <CategoryFilter
+                  categories={categories}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                />
+                <BillingFilter
+                  billingTypes={billingTypes}
+                  billingFilter={billingFilter}
+                  setBillingFilter={setBillingFilter}
+                />
+              </div>
+              <div className="flex space-x-2">
+                <ToggleGroup
+                  type="single"
+                  value={selectedView}
+                  aria-label="View Options"
+                  className="flex space-x-2"
+                >
+                  <ToggleGroupItem
+                    value="week"
+                    aria-label="Week View"
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium",
+                      selectedView === "week" ? "!bg-primary !text-white" : ""
+                    )}
+                    onClick={() => handleViewChange("week")}
+                  >
+                    Week
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="day"
+                    aria-label="Day View"
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium",
+                      selectedView === "day" ? "!bg-primary !text-white" : ""
+                    )}
+                    onClick={() => handleViewChange("day")}
+                  >
+                    Day
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+          </div>
+          {/* Timesheet Table */}
+          {tasks && tasks.length > 0 && (
+            <TimesheetTable
+              tasks={tasks}
+              days={dateRangeArray.map((d) => moment(new Date(d)).toDate())}
+              handleTimeChange={handleTimeChange}
+              handleTaskSelect={handleTaskSelect}
             />
-            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>
-          <div className="flex gap-4">
-            <div className="flex space-x-4">
-              <CategoryFilter
-                categories={categories}
-                categoryFilter={categoryFilter}
-                setCategoryFilter={setCategoryFilter}
-              />
-              <BillingFilter
-                billingTypes={billingTypes}
-                billingFilter={billingFilter}
-                setBillingFilter={setBillingFilter}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <ToggleGroup
-                type="single"
-                value={selectedView} // controlled value
-                aria-label="View Options"
-                className="flex space-x-2"
-              >
-                {/* <ToggleGroupItem
-                  value="month"
-                  aria-label="Month View"
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium",
-                    selectedView === "month" ? "!bg-primary !text-white" : ""
-                  )}
-                  onClick={() => handleViewChange("month")}
-                >
-                  Month
-                </ToggleGroupItem> */}
-                <ToggleGroupItem
-                  value="week"
-                  aria-label="Week View"
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium",
-                    selectedView === "week" ? "!bg-primary !text-white" : ""
-                  )}
-                  onClick={() => handleViewChange("week")}
-                >
-                  Week
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                  value="day"
-                  aria-label="Day View"
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium",
-                    selectedView === "day" ? "!bg-primary !text-white" : ""
-                  )}
-                  onClick={() => handleViewChange("day")}
-                >
-                  Day
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          </div>
+          )}
         </div>
-        {/* Timesheet Table */}
-        {tasks && tasks.length > 0 && (
-          <TimesheetTable
-            tasks={tasks}
-            days={dateRangeArray.map((d) => moment(new Date(d)).toDate())}
-            handleTimeChange={handleTimeChange}
-            handleTaskSelect={handleTaskSelect}
-          />
-        )}
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

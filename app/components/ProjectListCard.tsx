@@ -28,7 +28,10 @@ export default function ProjectListCard({
 }: ProjectCardProps) {
   const router = useRouter();
   return (
-    <Card className="w-full max-w-sm cursor-pointer" onClick={() => router.push(`/projects/task/${id}`)}>
+    <Card
+      className="w-full max-w-sm cursor-pointer"
+      onClick={() => router.push(`/projects/task/${id}`)}
+    >
       <CardHeader>
         <CardTitle className="text-xl font-bold">{projectName}</CardTitle>
       </CardHeader>
@@ -47,7 +50,7 @@ export default function ProjectListCard({
       <CardFooter>
         <Badge variant="secondary" className="flex items-center space-x-2">
           <ClipboardList className="h-4 w-4" />
-          <span>{`${taskCount}`} tasks</span>
+          <span> {taskCount} tasks</span>
         </Badge>
       </CardFooter>
     </Card>
