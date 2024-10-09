@@ -8,6 +8,7 @@ import { DataTableViewOptions } from "./data-table-view-options";
 import { priorities, statuses } from "../data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { useState } from "react";
+import SearchBar from "../../../../components/ui/search";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -20,40 +21,40 @@ export function DataTableToolbar<TData>({
   const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-1 items-center space-x-2">
-        <Input
-          placeholder="Filter tasks..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="h-8 w-[150px] lg:w-[250px]"
-        />
-        {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-1 items-center justify-between space-x-4">
+        <div className="flex w-auto md:w-[500px]">
+          <SearchBar
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(value) => table.getColumn("name")?.setFilterValue(value)}
           />
-        )}
-        {table.getColumn("priority") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("priority")}
-            title="Priority"
-            options={priorities}
-          />
-        )}
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={() => table.resetColumnFilters()}
-            className="h-8 px-2 lg:px-3"
-          >
-            Reset
-            <Cross2Icon className="ml-2 h-4 w-4" />
-          </Button>
-        )}
+        </div>
+        <div className="flex gap-4">
+          {table.getColumn("status") && (
+            <DataTableFacetedFilter
+              column={table.getColumn("status")}
+              title="Status"
+              options={statuses}
+            />
+          )}
+          {table.getColumn("priority") && (
+            <DataTableFacetedFilter
+              column={table.getColumn("priority")}
+              title="Priority"
+              options={priorities}
+            />
+          )}
+          {isFiltered && (
+            <Button
+              variant="ghost"
+              onClick={() => table.resetColumnFilters()}
+              className="h-8 px-2 lg:px-3"
+            >
+              Reset
+              <Cross2Icon className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <DataTableViewOptions table={table} />

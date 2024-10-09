@@ -80,7 +80,11 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
                     onTimeChange={(newTime) =>
                       handleTimeChange(task.task_id, dayStr, newTime)
                     }
-                    addedHours={task.hours[`${moment(new Date(day)).format("YYYY-MM-DD")}`]}
+                    addedHours={
+                      task.hours[
+                        `${moment(new Date(day)).format("YYYY-MM-DD")}`
+                      ]
+                    }
                   />
                 </TableCell>
               );

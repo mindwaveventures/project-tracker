@@ -3,7 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import SearchBar from "@/components/ui/search";
+import PageContainer from "../components/layout/page-container";
+import React from "react";
+import ProjectSkeletonLoader from "@/components/ui/skeleton-project";
 
 interface Employee {
   _id: number;
@@ -17,12 +20,11 @@ interface Employee {
   image_url: string;
 }
 
-const employees: Employee[] = [];
-
 export default function ExployeesCard() {
   const [users, setUsers] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // State for the search query
 
   useEffect(() => {
     // Fetching users from an API
@@ -44,47 +46,68 @@ export default function ExployeesCard() {
     fetchUsers();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <ProjectSkeletonLoader />;
   if (error) return <p>Error: {error}</p>;
 
-  return (
-    <div className="container mx-auto py-10">
-      <h2 className="text-2xl font-bold mb-6">Our Team</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {users.length > 0 &&
-          users.map((employee) => (
-            <Card key={employee._id}>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarImage src={employee.image_url} alt={employee.name} />
-                    <AvatarFallback>
-                      {employee.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="text-lg font-semibold mb-1">
-                    {employee.name}
-                  </h3>
-                  {/* <p className="text-sm text-muted-foreground mb-2">
+  // Filter users based on the search query
+  const filteredUsers = users.filter((employee) =>
+    employee.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-                </p> */}
-                  <Badge variant="secondary" className="mb-2">
-                    {employee.role?.name}
-                  </Badge>
-                  <a
-                    href={`mailto:${employee.email}`}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    {employee.email}
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+  return (
+    <PageContainer>
+      <div className="container mx-auto">
+        <h2 className="text-2xl font-bold mb-6">Our Team</h2>
+        <div className="grid gap-10 ">
+          <div className="flex">
+            <SearchBar
+              placeholder="Search for a name..."
+              value={searchQuery}
+              onChange={(query) => setSearchQuery(query)}
+              className="w-full md:w-[500px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((employee) => (
+                <Card key={employee._id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col items-center">
+                      <Avatar className="h-24 w-24 mb-4">
+                        <AvatarImage
+                          src={employee.image_url}
+                          alt={employee.name}
+                        />
+                        <AvatarFallback>
+                          {employee.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <h3 className="text-lg font-semibold mb-1">
+                        {employee.name}
+                      </h3>
+                      <Badge variant="secondary" className="mb-2">
+                        {employee.role?.name}
+                      </Badge>
+                      <a
+                        href={`mailto:${employee.email}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        {employee.email}
+                      </a>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p>No employees found.</p>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

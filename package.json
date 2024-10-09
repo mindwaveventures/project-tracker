@@ -38,6 +38,7 @@
     "mongoose": "^8.6.3",
     "next": "^14.2.13",
     "next-auth": "^4.24.8",
+    "next-themes": "^0.3.0",
     "rc-time-picker": "^3.7.3",
     "react": "^18",
     "react-dom": "^18",

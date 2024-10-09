@@ -1,5 +1,7 @@
 "use client";
 
+import PageLoader from "@/components/ui/skeleton-page-loader";
+import ProjectSkeletonLoader from "@/components/ui/skeleton-project";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 
@@ -7,7 +9,7 @@ export default function Dashboard() {
   const { data: session } = useSession();
 
   if (!session) {
-    return <p>Loading...</p>; // Add loading or redirect logic here
+    return <PageLoader />; // Add loading or redirect logic here
   }
 
   return (

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import PageLoader from "@/components/ui/skeleton-page-loader";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -20,7 +21,11 @@ export default function Home() {
 
   // Show a loading state while session status is being fetched
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <PageLoader />
+      </div>
+    );
   }
 
   return (

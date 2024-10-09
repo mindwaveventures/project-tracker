@@ -3,7 +3,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import AssignersList from "../../../components/AssignersList"; // Ensure the correct path
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -139,9 +141,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Task Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Task Name
-        </label>
+        </Label>
         <Controller
           name="name"
           control={control}
@@ -149,7 +151,7 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
             <Input
               {...field}
               placeholder="Enter task name"
-              className="mt-1 block w-full"
+              className="block w-full"
             />
           )}
         />
@@ -160,9 +162,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Description
-        </label>
+        </Label>
         <Controller
           name="description"
           control={control}
@@ -170,7 +172,7 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
             <Textarea
               {...field}
               placeholder="Enter task description"
-              className="mt-1 block w-full"
+              className="block w-full"
             />
           )}
         />
@@ -181,9 +183,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
 
       {/* Priority */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Priority
-        </label>
+        </Label>
         <Controller
           name="priority"
           control={control}
@@ -209,9 +211,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
 
       {/* Project */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Project
-        </label>
+        </Label>
         <Controller
           name="project"
           control={control}
@@ -237,9 +239,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
 
       {/* Billing Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Billing Type
-        </label>
+        </Label>
         <Controller
           name="billing_type"
           control={control}
@@ -262,9 +264,9 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
 
       {/* Assigners */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <Label className="block text-sm font-medium text-gray-700">
           Assigners
-        </label>
+        </Label>
         <Controller
           name="assigners"
           control={control}
@@ -282,9 +284,11 @@ export default function AddTaskForm({ onTaskCreated }: AddTaskFormProps) {
       </div>
 
       {/* Button Label based on taskId */}
-      <Button type="submit">
-        {taskId ? "Update Task" : "Create Task"} {/* Conditional label */}
-      </Button>
+      <div className="flex justify-end mt-4">
+        <Button type="submit">
+          {taskId ? "Update Task" : "Create Task"} {/* Conditional label */}
+        </Button>
+      </div>
     </form>
   );
 }
